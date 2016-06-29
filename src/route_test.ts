@@ -1,13 +1,12 @@
 import * as Koa from 'koa';
 import * as Request from 'supertest';
-import {AppContext} from './';
+import {AppContext} from './kontex';
 import * as r from './router';
 import k from './kompose';
 
 function listen(app) {
     return app.listen();
 }
-
 
 async function hello(ctx: AppContext, args): Promise<any> {
     ctx.body = "hello";

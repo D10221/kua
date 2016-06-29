@@ -1,64 +1,75 @@
-import {AppContext, AppMiddleware, Next, Result} from './';
-import {getUser, authenticate, Claim, hasClaim} from './user';
+import {AppContext, AppMiddleware, Next, Result, User,IUserService, Auth} from './kontex';
+
 
 import * as Koa from 'koa';
 const compose = require('koa-compose');
 import * as pathToRegexp from 'path-to-regexp';
 
 
-export async function userWare(ctx: AppContext, next: Next): Promise<any> {
+export class BasicAuth implements Auth {
 
-    let result = getUser(ctx.request.headers['authentication']);
-    if (result.error) {
-        ctx.throw(`user not found: ${result.error.message ? result.error.message : 'Error'}`, 407);
-        return;
+    constructor(private usvc: IUserService ) {
+        
     }
-    ctx.user = result.value;
-    return next();
-}
 
-export async function authWare(ctx: AppContext, next: Next): Promise<any> {
-    let result = authenticate(ctx.user);
-    if (result.error) {
-        ctx.throw(result.error.message ? result.error.message : 'Error', 401);
-        return;
-    }
-    // replace with full user 
-    ctx.user = result.value;
-    next();
-}
-
-/**
- *  Requires UserWare  
- * @export
- * @param {Role[]} roles
- * @returns {AppMiddleware}
- */
-export function restrict(claims: Claim[]): AppMiddleware {
-    //
-    return async function (ctx: AppContext, next: () => Promise<any>) {        
-        if (!hasClaim(ctx.user, claims)) {
-            ctx.status = 403;
+    userWare = (ctx: AppContext, next: Next): Promise<any> => {
+        const credentials = ctx.request.headers['authentication'];
+        let result = this.usvc.getUser(credentials);
+        if (result.error) {
+            ctx.throw(`user not found: ${result.error.message ? result.error.message : 'Error'}`, 407);
             return;
         }
+        ctx.user = result.value;
         return next();
     }
-}
-/**
- *Requires 'endPoint' 
- * 
- * @export
- * @param {AppMiddleware} endPoint
- * @param {Claim[]} [roles] optional claims
- * @returns {AppMiddleware}}
- */
-export function lock(endPoint,claims?: Claim[]){             
+
+    authWare = async (ctx: AppContext, next: Next): Promise<any> => {
+        let result = this.usvc.authenticate(ctx.user);
+        if (result.error) {
+            ctx.throw(result.error.message ? result.error.message : 'Error', 401);
+            return;
+        }
+        // replace with full user 
+        ctx.user = result.value;
+        next();
+    }
+
+    /**
+     *  Requires UserWare  
+     * @export
+     * @param {Role[]} roles
+     * @returns {AppMiddleware}
+     */
+    restrict= (claims: string[]): AppMiddleware => {
+        const auth = this;
+        return async function (ctx: AppContext, next: () => Promise<any>) {
+            if (!auth.usvc.hasClaim(ctx.user, claims)) {
+                ctx.status = 403;
+                return;
+            }
+            return next();
+        }
+    }
+
+    /**
+     *Requires 'endPoint' 
+     * 
+     * @export
+     * @param {AppMiddleware} endPoint
+     * @param {Claim[]} [roles] optional claims
+     * @returns {AppMiddleware}}
+     */
+    lock = (endPoint: AppMiddleware, claims?: string[]): AppMiddleware => {
         return compose([
-            userWare, 
-            authWare,
-            restrict(claims),
+            this.userWare,
+            this.authWare,
+            this.restrict(claims),
             endPoint
         ]);
+    }
 }
+
+
+
 
 

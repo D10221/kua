@@ -1,7 +1,9 @@
 import * as Koa from 'koa';
 import * as Request from 'supertest';
-import {AppContext} from './';
-import * as auth from './auth';
+import * as testing from './tests';
+import {AppContext, User, Auth } from './kontex';
+import {BasicAuth} from './auth';
+import * as users from './user';
 
 function listen(app) {
     return app.listen();
@@ -11,36 +13,43 @@ async function endPoint(ctx: AppContext, next: () => Promise<any>): Promise<any>
     ctx.body = "hello";
 }
 
-describe('restrict access,...composing', function () {
+describe('Auth: restrict access,...composing', function () {
+
     it('works', function (done) {
-        let app = new Koa();
-       
-        app.use(auth.lock(endPoint, ['admin', 'user']));
-        let request = Request.agent(listen(app));
         
+        let app = new Koa();        
+
+        let crypto = testing.noCrypto;
+
+        const auth :Auth= new BasicAuth( new users.Service( new testing.UStore(crypto), crypto));
+
+        app.use(auth.lock(endPoint, ['admin', 'user']));
+
+        let request = Request.agent(listen(app));
+
         request.get('/')
-            .set('Authentication', JSON.stringify({ name: "admin", password: "admin"}))
+            .set('Authentication', JSON.stringify({ name: "admin", password: "admin" }))
             .expect("hello")
             .end((error, r) => {
-                if (error) throw (error);
+                if (error) throw (error);                
             });
 
         request.get('/')
-            .expect(407)            
+            .expect(407)
             .end((error, r) => {
                 if (error) throw (error);                
             })
-        
+
         request.get('/')
-            .set('Authentication', JSON.stringify({ name: 'bob', password: 'bob'}))
+            .set('Authentication', JSON.stringify({ name: 'bob', password: 'bob' }))
             .expect(200)
             .expect('hello')
             .end((error, r) => {
                 if (error) throw (error);                
             })
-        
+
         request.get('/')
-            .set('Authentication', JSON.stringify({ name: 'guest', password: 'guest'}))
+            .set('Authentication', JSON.stringify({ name: 'guest', password: 'guest' }))
             .expect(403)
             .end((error, r) => {
                 if (error) throw (error);

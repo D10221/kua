@@ -1,65 +1,60 @@
-import {Result} from './';
+import {Result, User, IUserService, UserStore, Crypto } from './kontex';
 
-export interface User {
-    name: string;
-    password: string;
-    email?: string;
-    roles?: string[];
-}
+import * as Debug from 'debug';
+const debug = Debug('kua:auth')
 
-export type Claim = 'admin' | 'user' | 'guest';
-
-export function TryParse<T>(json: string): Result<T> {
+function TryParse<T>(json: string): Result<T> {
 
     let value = null;
     let error = null;
     try {
         value = JSON.parse(json)
     } catch (e) {
+        debug(`users: Parse: ${json}, Error: ${e.message}`)
         error = e;
     }
     return { error: error, value: value };
 }
 
-export function getUser(credentials: string): Result<User> {
-    return TryParse<User>(credentials);
-}
+export class Service implements IUserService {
 
-const users: User[] = [
-    { name: 'admin', password: 'admin',email:'admin@mail', roles: ['admin'] },
-    { name: 'bob', password: 'bob', email:'bob@mail', roles: ['user'] },
-    { name: 'guest', password: 'guest' }
-]
-//const roles = ['admin', 'user'];
+    constructor(private store: UserStore, private crypto: Crypto) {
+        
+    }
 
-export const hasClaim = (user: User, roles: string[]): boolean => {
-    if(!Array.isArray(roles)) return true;    
-    if (user && user.roles) {
-        for (let role of user.roles) {
-            for (let r of roles) {
-                if (r == role) {
-                    return true;
+    getUser(credentials: string): Result<User> {
+        return TryParse<User>(credentials);
+    }
+
+    hasClaim = (user: User, roles: string[]): boolean => {
+        if (!Array.isArray(roles)) return true;
+        if (user && user.roles) {
+            for (let role of user.roles) {
+                for (let r of roles) {
+                    if (r == role) {
+                        return true;
+                    }
                 }
             }
         }
+        return false;
     }
-    return false;
-}
 
-function matchUser(user:User): (user:User) => boolean {
-    return u => {
-        return u.name == user.name && u.password == user.password
+    private matchUser=(user: User): (user: User) => boolean => {
+        return u => {
+            return u.name == user.name && this.crypto.decrypt(u.password) == user.password
+        }
     }
-}
 
-export function authenticate(user: User): Result<User> {
-    let value = null;
-    let error = null;
-    try {
-        value = users.find(matchUser(user));
-        if(!value){ throw new Error('User Not Found')};        
-    } catch (e) {
-        error = e;
+    authenticate = (user: User): Result<User> => {
+        let value = null;
+        let error = null;
+        try {
+            value = this.store.find(this.matchUser(user));
+            if (!value) { throw new Error('User Not Found') };
+        } catch (e) {
+            error = e;
+        }
+        return { value: value, error: error };
     }
-    return { value: value, error: error };
 }
