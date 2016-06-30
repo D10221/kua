@@ -1,17 +1,13 @@
 import * as Koa from 'koa';
 
-export interface AppContext<TUser> extends Koa.Context {    
-    user: TUser;
-}
-
 export type Next = () => Promise<any>;
 
 export interface Result<T> { value: T, error: Error };
 
-export type AppMiddleware = <TUser>(ctx: AppContext<TUser>, next: () => Promise<any>) => Promise<any>;
+export type AppMiddleware = <TUser>(ctx: Koa.Context, next: () => Promise<any>) => Promise<any>;
 
 export interface AuthProvider<TUser> {
-        credentials(ctx:AppContext<TUser>): Promise<Result<Credential>>
+        credentials(ctx:Koa.Context): Promise<Result<Credential>>
         authenticate: (c: Credential) => Promise<Result<TUser>>;
         decode<T>(json: string): Result<T>;
         encode(u:Credential) :string;      

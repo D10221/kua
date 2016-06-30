@@ -1,19 +1,17 @@
 import * as Koa from 'koa';
 import * as Request from 'supertest';
-import {AppContext} from './kontex';
 import * as r from './router';
 import k from './kompose';
 
 function listen(app) {
     return app.listen();
 }
-type AContext = AppContext<any>;
 
-async function hello(ctx: AContext, args): Promise<any> {
+async function hello(ctx: Koa.Context, args): Promise<any> {
     ctx.body = "hello";
 }
 
-async function bye(ctx: AContext, args): Promise<any> {
+async function bye(ctx: Koa.Context, args): Promise<any> {
     ctx.body = "bye";
 }
 

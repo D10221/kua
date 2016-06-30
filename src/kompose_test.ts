@@ -1,6 +1,6 @@
 import * as Koa from 'koa';
 import * as Request from 'supertest';
-import {AppContext, AppMiddleware, Auth, UCrypto} from './kontex';
+import { AppMiddleware, Auth, UCrypto} from './kontex';
 import * as router from './router';
 //import {AnyAuth}from './auth';
 //import {AuthBasic} from './auth_basic'
@@ -8,7 +8,6 @@ import * as testing from './tests';
 import * as kua from './';
 
 import User = testing.User;
-type TestContext = AppContext<User>;
 
 function listen(app) {
     return app.listen();

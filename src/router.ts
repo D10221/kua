@@ -6,7 +6,7 @@ import Options = pathToRegexp.Options;
 const Debug = require('debug')
 const debug = Debug('k-route');
 
-import {AppMiddleware, AppContext } from './kontex';
+import {AppMiddleware } from './kontex';
 
 /**  
  * params are route segmens, last parameter is 'next' and is a function;

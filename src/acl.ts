@@ -1,4 +1,5 @@
-import {AppContext, AppMiddleware} from './kontex';
+import * as Koa from 'koa';
+import { AppMiddleware} from './kontex';
 
 export interface ClaimProvider<TUser, TClaim> {
     //
@@ -37,7 +38,7 @@ export class Acl<TUser, TClaim> {
      * if no required claims  , then  true
      * if no claims then false
      */
-    hasClaim = (ctx: AppContext<TUser>, required: TClaim[]): boolean => {
+    hasClaim = (ctx: Koa.Context, required: TClaim[]): boolean => {
         let user = this.provider.getUser(ctx);
         let claims = this.provider.getClaims(user);
         if (!Array.isArray(required)) return true;
@@ -51,7 +52,7 @@ export class Acl<TUser, TClaim> {
     */
     restrict = (required: TClaim[]): AppMiddleware => {
         const auth = this;
-        return async function (ctx: AppContext<TUser>, next: () => Promise<any>) {
+        return async function (ctx: Koa.Context, next: () => Promise<any>) {
             if (!auth.hasClaim(ctx, required)) {
                 ctx.status = 403;
                 return;

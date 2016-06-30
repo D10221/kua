@@ -1,4 +1,4 @@
-import {AppContext, AppMiddleware, Next, Auth, AuthProvider, Result, Credential} from './kontex';
+import { AppMiddleware, Next, Auth, AuthProvider, Result, Credential} from './kontex';
 import {Acl} from './acl';
 import k  from './kompose'
 import * as Koa from 'koa';
@@ -22,7 +22,7 @@ export class AnyAuth<TUser, TClaim> implements Auth<TUser, TClaim>{
         private acl?: Acl<TUser, TClaim>) {
     }
 
-    credentials = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
+    credentials = async (ctx: Koa.Context, next: Next): Promise<any> => {
         //const credentials = ctx.request.headers['authentication'];
         let result = await this.provider.credentials(ctx);
         if (result.error) {
@@ -33,7 +33,7 @@ export class AnyAuth<TUser, TClaim> implements Auth<TUser, TClaim>{
         return next();
     }
 
-    authorization = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
+    authorization = async (ctx: Koa.Context, next: Next): Promise<any> => {
         let result = await this.provider.authenticate(ctx['credentials']);
         if (result.error) {
             ctx.throw(result.error.message ? result.error.message : 'Error', 401);
@@ -41,7 +41,7 @@ export class AnyAuth<TUser, TClaim> implements Auth<TUser, TClaim>{
         }
 
         this.user.set(ctx, result.value)
-        
+
         next();
     }
 
