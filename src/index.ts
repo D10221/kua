@@ -39,11 +39,11 @@ export function basicAuth<TUser>(find: (user: TUser) => Promise<TUser>) {
  * @returns {Acl<U, C>}
  */
 export function acl<U, C>(
-    
+    // how to get user from context 
     getUser: (ctx) => U,
-    //
+    // how to  get claims from user 
     getClaims: (u: U) => C[],
-    // 
+    // Optional : defaults to x == y 
     claimMatch?: (userClaims: C[], requiredClaims: C[]) => boolean): Acl<U, C> {
 
     return new Acl({ getUser: getUser, getClaims, claimMatch });
