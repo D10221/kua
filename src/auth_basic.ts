@@ -1,3 +1,4 @@
+import * as assert from 'assert';
 import * as Koa from 'koa';
 import {Result, AuthProvider ,Credential } from './kontex';
 import * as Debug from 'debug';
@@ -15,14 +16,10 @@ export class AuthBasic<TUser> implements AuthProvider<TUser> {
         let value = null;
         let error = null;
         try {
-            let r = regex.exec(header);
-            
-            let auth = new Buffer(r[1], 'Base64').toString();
-            
+            let r = regex.exec(header);            
+            let auth = new Buffer(r[1], 'Base64').toString();            
             let parts = /^([^:]*):(.*)$/.exec(auth);            
-
             value = {name: parts[1], password: parts[2]} ;
-
         } catch (e) {
             debug(`users: Parse: ${header}, Error: ${e.message}`)
             error = e;
@@ -30,17 +27,15 @@ export class AuthBasic<TUser> implements AuthProvider<TUser> {
         return { error: error, value: value };
     }
 
-    encode(c:Credential): string {
-        let s = !c ? '' : ((c.name ||'') +':'+ (c.password ||''));                
-        return `Basic ${new Buffer(s).toString('Base64')}`;
+    encode(c:Credential): string {  
+        assert(c);                      
+        return `Basic ${new Buffer(`${c.name}:${c.password}`).toString('Base64')}`;
     }
 
     key = 'authentication';
 
     fromContext = async (ctx: Koa.Context): Promise<Result<Credential>> => {        
-            return this.decode(
-                ctx.request.headers[this.key]
-                );            
+            return this.decode(ctx.request.headers[this.key]);            
     }
 
     authenticate = async (c: Credential): Promise<Result<TUser>> => {
@@ -59,27 +54,4 @@ export class AuthBasic<TUser> implements AuthProvider<TUser> {
 export interface Credentials {
     name: string;
     password: string;
-}
-
-function auth(getUser: (name: string, pass: string) => Promise<Credential>
-) {
-
-    let regex = /Basic\s+(.*)/i;
-
-    return async function (header) {
-
-        let r = regex.exec(header);
-        if (!r) throw (401);
-
-        let auth = new Buffer(r[1], 'base64').toString();
-        if (!auth) throw (401);
-
-        let parts = /^([^:]*):(.*)$/.exec(auth);
-
-        let user = await getUser(parts[1], parts[2]);
-        if (!user) throw (401);
-
-        // (ctx.request as any).user = user;
-        // next();
-    }
 }
