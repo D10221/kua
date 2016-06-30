@@ -1,46 +1,50 @@
-import {AppContext, AppMiddleware, Next,  Auth, AuthProvider,  Result, Credential} from './kontex';
+import {AppContext, AppMiddleware, Next, Auth, AuthProvider, Result, Credential} from './kontex';
 import {Acl} from './acl';
 import k  from './kompose'
 import * as Koa from 'koa';
 import * as pathToRegexp from 'path-to-regexp';
-  
+
 // let _getUser = async (ctx)=>{
 //         const credentials = ctx.request.headers['authentication'];
 //         let result = await this.getUser(credentials);
 // }
-const skip = async (ctx, next)=> { next() };
+const skip = async (ctx, next) => { next() };
 
-export class AnyAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
+export class AnyAuth<TUser, TClaim> implements Auth<TUser, TClaim>{
+
+    user = {
+        get: (ctx) => { return ctx.user; },
+        set: (ctx, value) => { ctx.user = value }
+    }
 
     constructor(
-        public provider: AuthProvider<TUser>,       
-        private acl?:Acl<TUser,TClaim> ) {
+        public provider: AuthProvider<TUser>,
+        private acl?: Acl<TUser, TClaim>) {
     }
-    
+
     credentials = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
         //const credentials = ctx.request.headers['authentication'];
-        let result = await this.provider.fromContext(ctx);
+        let result = await this.provider.credentials(ctx);
         if (result.error) {
             ctx.throw(`user not found: ${result.error.message ? result.error.message : 'Error'}`, 407);
             return;
         }
-        (ctx as any).credentials = result.value;
+        ctx['credentials'] = result.value;
         return next();
     }
 
     authorization = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
-        const c = (ctx as any).credentials as Credential;
-        let result = await this.provider.authenticate(c);
+        let result = await this.provider.authenticate(ctx['credentials']);
         if (result.error) {
             ctx.throw(result.error.message ? result.error.message : 'Error', 401);
             return;
         }
+
+        this.user.set(ctx, result.value)
         
-        ctx.user = result.value;
         next();
     }
 
-   
     /**
      * Requires 'endPoint'... resource to be locked down  
      * 
@@ -50,10 +54,10 @@ export class AnyAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
      * @returns {AppMiddleware}}
      */
     lock = (endPoint: AppMiddleware, claims?: TClaim[]): AppMiddleware => {
-        return k( 
+        return k(
             this.credentials,
             this.authorization,
-            this.acl ? this.acl.restrict(claims) : skip ,
+            this.acl ? this.acl.restrict(claims) : skip,
             endPoint);
     }
 }

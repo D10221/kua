@@ -34,7 +34,7 @@ export class AuthBasic<TUser> implements AuthProvider<TUser> {
 
     key = 'authentication';
 
-    fromContext = async (ctx: Koa.Context): Promise<Result<Credential>> => {        
+    credentials = async (ctx: Koa.Context): Promise<Result<Credential>> => {        
             return this.decode(ctx.request.headers[this.key]);            
     }
 

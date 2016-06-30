@@ -5,13 +5,13 @@
   "main": "built/index.js",
   "typings": "built/index.d.ts",
   "scripts": {
-    "typings": "node ./node_modules/typings/dist/bin.js install",
+    "typings": "typings install",
     "debug": "export DEBUG=kua ||SET DEBUG=kua || true",
     "test": "mocha built/tests.js || true",
     "build": "tsc -p . || true",
     "clean": "rm -rf ./built", 
     "pretest": "npm run build",
-    "postinstall": "npm run typings && npm run build"
+    "postinstall": "npm run typings && npm test"
   },
   "author": "",
   "license": "ISC",

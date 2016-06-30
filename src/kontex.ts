@@ -11,7 +11,7 @@ export interface Result<T> { value: T, error: Error };
 export type AppMiddleware = <TUser>(ctx: AppContext<TUser>, next: () => Promise<any>) => Promise<any>;
 
 export interface AuthProvider<TUser> {
-        fromContext(ctx:AppContext<TUser>): Promise<Result<Credential>>
+        credentials(ctx:AppContext<TUser>): Promise<Result<Credential>>
         authenticate: (c: Credential) => Promise<Result<TUser>>;
         decode<T>(json: string): Result<T>;
         encode(u:Credential) :string;      
