@@ -35,7 +35,6 @@ export class BasicAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
     }
 
    
-
     /**
      * Requires 'endPoint'... resource to be locked down  
      * 

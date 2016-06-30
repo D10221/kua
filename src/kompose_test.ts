@@ -37,10 +37,12 @@ describe('kompose auth + routing', () => {
 
         let app = new Koa();
         let crypto = testing.noCrypto;
-        let acl = new Acl<User,string>(ctx=> ctx.user, user=> user.roles );
+        
         let auth :Auth<User,string>= new BasicAuth( 
                 new users.Service( new testing.UStore(crypto),crypto),
-                acl);
+                new Acl<User,string>(
+                    ctx=> ctx.user, 
+                    user=> user.roles));
 
         app.use(router.get('/bye', bye));
         app.use(router.get('/hello', hello));
