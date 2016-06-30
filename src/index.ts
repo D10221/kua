@@ -1,6 +1,8 @@
 import {AnyAuth} from './auth';
 import {AuthBasic} from './auth_basic';
 import {Acl} from './acl';
+import {Credential} from './kontex';
+export {Credential} from './kontex';
 
 /**
  * Main Fty...  
@@ -23,7 +25,7 @@ export function create<TUser, TClaim>(provider, acl?) {
  * @param {(user: TUser) => Promise<TUser>} find 
  * @returns
  */
-export function basicAuth<TUser>(find: (user: TUser) => Promise<TUser>) {
+export function basicAuth<TUser>(find: (credential: Credential) => Promise<TUser>) {
     return new AuthBasic<TUser>(find);
 }
 

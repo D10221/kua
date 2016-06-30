@@ -42,7 +42,7 @@ describe('Auth: restrict access,...composing', function () {
             .set(auth.provider.key, auth.provider.encode(users.admin))
             .expect("hello")
             .end((error, r) => {
-                if (error) throw (error);
+                if (error) throw (error);                
             });
 
         request.get('/')

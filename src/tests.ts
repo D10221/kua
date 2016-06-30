@@ -1,4 +1,4 @@
-import {UCrypto} from './kontex';
+import {UCrypto, Credential} from './kontex';
 import './auth_test';
 import './route_test';
 import './kompose_test';
@@ -19,14 +19,16 @@ export class UStore {
 
     users: User[];
 
-    find= (user: User): Promise<User> => {
+    find= (credential:Credential ): Promise<User> => {
         const users = this.users;
         return new Promise((resolve, reject) => {
             try {
-                resolve(
-                    users.find(current => {
-                    return current.name == user.name && this.crypto.decrypt(current.password) == user.password
-                }));
+                const name = credential.name;
+                const pass = credential.password;
+                const found = users.find(current => {
+                    return current.name == name && this.crypto.decrypt(current.password) == credential.password
+                })
+                resolve(found);
             } catch (error) {
                 reject(error);
             }
