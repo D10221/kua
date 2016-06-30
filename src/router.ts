@@ -59,8 +59,7 @@ let create = (method?:string) : Route => {
       if (m) {
         //collect route segments 
         const args = m.slice(1).map(decode);
-        debug('%s %s matches %s %j', ctx.method, path, ctx.path, args);            
-        ctx.args = args;
+        debug('%s %s matches %s %j', ctx.method, path, ctx.path, args);                    
         //...                          
         let ok = await action(ctx, args);
         if(ok){

@@ -18,13 +18,13 @@ export interface User {
 }
 
 export interface IUserService {
-        getUser: (credentialsa: string) => Result<User>;
-        authenticate: (u: User) => Result<User>;
+        getUser: (credentialsa: string) => Promise<Result<User>>;
+        authenticate: (u: User) => Promise<Result<User>>;
         hasClaim: (u: User, claims: string[]) => boolean;
 }
 
 export interface UserStore {
-    find(predicate: (u:User)=> boolean) : User;
+    find(predicate: (u:User)=> boolean) : Promise<User>;
 }
 
 export interface Auth{

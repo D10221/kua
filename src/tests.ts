@@ -19,8 +19,8 @@ export class UStore {
 
     users: User[];
 
-    find = (predicate) => {
-        return this.users.find(predicate)
+    find = (predicate) : Promise<User> => {
+        return Promise.resolve(this.users.find(predicate))
     }
 }
 

@@ -22,8 +22,8 @@ export class Service implements IUserService {
         
     }
 
-    getUser(credentials: string): Result<User> {
-        return TryParse<User>(credentials);
+    getUser(credentials: string): Promise<Result<User>> {
+        return Promise.resolve(TryParse<User>(credentials));
     }
 
     hasClaim = (user: User, roles: string[]): boolean => {
@@ -46,11 +46,11 @@ export class Service implements IUserService {
         }
     }
 
-    authenticate = (user: User): Result<User> => {
+    authenticate = async (user: User): Promise<Result<User>> => {
         let value = null;
         let error = null;
         try {
-            value = this.store.find(this.matchUser(user));
+            value = await this.store.find(this.matchUser(user));
             if (!value) { throw new Error('User Not Found') };
         } catch (e) {
             error = e;

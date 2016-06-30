@@ -6,7 +6,8 @@
   "scripts": {
     "debug": "export DEBUG=k-route ||SET DEBUG=k-route || true" , 
     "test": "npm run build  && mocha built/tests.js || true",
-    "build": "tsc -p . || true"
+    "build": "tsc -p . || true",
+    "clean": "rm -rf ./built"
   },
   "author": "",
   "license": "ISC",

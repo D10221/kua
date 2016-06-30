@@ -13,17 +13,17 @@ async function endPoint(ctx: AppContext, next: () => Promise<any>): Promise<any>
     ctx.body = "hello";
 }
 
-describe('Auth: restrict access,...composing', function () {
 
+describe('Auth: restrict access,...composing', function () {
+       
     it('works', function (done) {
-        
-        let app = new Koa();        
 
         let crypto = testing.noCrypto;
-
-        const auth :Auth= new BasicAuth( new users.Service( new testing.UStore(crypto), crypto));
-
-        app.use(auth.lock(endPoint, ['admin', 'user']));
+        const auth: Auth = new BasicAuth(new users.Service(new testing.UStore(crypto), crypto));
+        let app = new Koa().use(
+            auth.lock(
+                endPoint, ['admin', 'user'])
+            );        
 
         let request = Request.agent(listen(app));
 
@@ -31,13 +31,13 @@ describe('Auth: restrict access,...composing', function () {
             .set('Authentication', JSON.stringify({ name: "admin", password: "admin" }))
             .expect("hello")
             .end((error, r) => {
-                if (error) throw (error);                
+                if (error) throw (error);
             });
 
         request.get('/')
             .expect(407)
             .end((error, r) => {
-                if (error) throw (error);                
+                if (error) throw (error);
             })
 
         request.get('/')
@@ -45,7 +45,7 @@ describe('Auth: restrict access,...composing', function () {
             .expect(200)
             .expect('hello')
             .end((error, r) => {
-                if (error) throw (error);                
+                if (error) throw (error);
             })
 
         request.get('/')

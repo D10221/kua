@@ -31,6 +31,7 @@ async function admin(ctx: AppContext, args): Promise<boolean> {
 }
 
 describe('kompose auth + routing', () => {
+    
     it('goes', (done) => {
 
         let app = new Koa();

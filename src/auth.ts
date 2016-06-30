@@ -1,4 +1,4 @@
-import {AppContext, AppMiddleware, Next, Result, User,IUserService, Auth} from './kontex';
+import {AppContext, AppMiddleware, Next,  IUserService, Auth} from './kontex';
 
 
 import * as Koa from 'koa';
@@ -12,9 +12,9 @@ export class BasicAuth implements Auth {
         
     }
 
-    userWare = (ctx: AppContext, next: Next): Promise<any> => {
+    userWare = async (ctx: AppContext, next: Next): Promise<any> => {
         const credentials = ctx.request.headers['authentication'];
-        let result = this.usvc.getUser(credentials);
+        let result = await this.usvc.getUser(credentials);
         if (result.error) {
             ctx.throw(`user not found: ${result.error.message ? result.error.message : 'Error'}`, 407);
             return;
@@ -24,7 +24,7 @@ export class BasicAuth implements Auth {
     }
 
     authWare = async (ctx: AppContext, next: Next): Promise<any> => {
-        let result = this.usvc.authenticate(ctx.user);
+        let result = await this.usvc.authenticate(ctx.user);
         if (result.error) {
             ctx.throw(result.error.message ? result.error.message : 'Error', 401);
             return;
@@ -52,7 +52,7 @@ export class BasicAuth implements Auth {
     }
 
     /**
-     *Requires 'endPoint' 
+     * Requires 'endPoint'... resource to be locked down  
      * 
      * @export
      * @param {AppMiddleware} endPoint
