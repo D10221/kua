@@ -1,14 +1,14 @@
 import {AppContext, AppMiddleware, Next,  IUserService, Auth} from './kontex';
-
+import {Acl} from './acl';
 
 import * as Koa from 'koa';
 const compose = require('koa-compose');
 import * as pathToRegexp from 'path-to-regexp';
 
 
-export class BasicAuth implements Auth {
+export class BasicAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
 
-    constructor(private usvc: IUserService ) {
+    constructor(private usvc: IUserService, private acl:Acl<TUser,TClaim> ) {
         
     }
 
@@ -34,22 +34,7 @@ export class BasicAuth implements Auth {
         next();
     }
 
-    /**
-     *  Requires UserWare  
-     * @export
-     * @param {Role[]} roles
-     * @returns {AppMiddleware}
-     */
-    restrict= (claims: string[]): AppMiddleware => {
-        const auth = this;
-        return async function (ctx: AppContext, next: () => Promise<any>) {
-            if (!auth.usvc.hasClaim(ctx.user, claims)) {
-                ctx.status = 403;
-                return;
-            }
-            return next();
-        }
-    }
+   
 
     /**
      * Requires 'endPoint'... resource to be locked down  
@@ -59,11 +44,11 @@ export class BasicAuth implements Auth {
      * @param {Claim[]} [roles] optional claims
      * @returns {AppMiddleware}}
      */
-    lock = (endPoint: AppMiddleware, claims?: string[]): AppMiddleware => {
+    lock = (endPoint: AppMiddleware, claims?: TClaim[]): AppMiddleware => {
         return compose([
             this.userWare,
             this.authWare,
-            this.restrict(claims),
+            this.acl.restrict(claims),
             endPoint
         ]);
     }

@@ -1,5 +1,4 @@
 import {Result, User, IUserService, UserStore, Crypto } from './kontex';
-
 import * as Debug from 'debug';
 const debug = Debug('kua:auth')
 
@@ -19,26 +18,14 @@ function TryParse<T>(json: string): Result<T> {
 export class Service implements IUserService {
 
     constructor(private store: UserStore, private crypto: Crypto) {
-        
+    
     }
 
     getUser(credentials: string): Promise<Result<User>> {
         return Promise.resolve(TryParse<User>(credentials));
     }
 
-    hasClaim = (user: User, roles: string[]): boolean => {
-        if (!Array.isArray(roles)) return true;
-        if (user && user.roles) {
-            for (let role of user.roles) {
-                for (let r of roles) {
-                    if (r == role) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
+    
 
     private matchUser=(user: User): (user: User) => boolean => {
         return u => {

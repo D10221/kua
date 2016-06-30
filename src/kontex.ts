@@ -20,15 +20,15 @@ export interface User {
 export interface IUserService {
         getUser: (credentialsa: string) => Promise<Result<User>>;
         authenticate: (u: User) => Promise<Result<User>>;
-        hasClaim: (u: User, claims: string[]) => boolean;
+       // hasClaim: (u: User, claims: string[]) => boolean;
 }
 
 export interface UserStore {
     find(predicate: (u:User)=> boolean) : Promise<User>;
 }
 
-export interface Auth{
-    lock (endPoint: AppMiddleware, claims?: string[]) : AppMiddleware
+export interface Auth<TUser,TClaim>{
+    lock (endPoint: AppMiddleware, claims?: TClaim[]) : AppMiddleware
 }
 
 export interface Crypto {

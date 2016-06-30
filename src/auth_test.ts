@@ -3,6 +3,7 @@ import * as Request from 'supertest';
 import * as testing from './tests';
 import {AppContext, User, Auth } from './kontex';
 import {BasicAuth} from './auth';
+import {Acl} from './acl';
 import * as users from './user';
 
 function listen(app) {
@@ -19,7 +20,11 @@ describe('Auth: restrict access,...composing', function () {
     it('works', function (done) {
 
         let crypto = testing.noCrypto;
-        const auth: Auth = new BasicAuth(new users.Service(new testing.UStore(crypto), crypto));
+          let acl = new Acl<User,string>(ctx=> ctx.user, user=> user.roles );
+        let auth :Auth<User,string>= new BasicAuth( 
+                new users.Service( new testing.UStore(crypto),crypto),
+                acl);
+
         let app = new Koa().use(
             auth.lock(
                 endPoint, ['admin', 'user'])
