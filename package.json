@@ -2,7 +2,8 @@
   "name": "kua",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "built/index.js",
+  "typings": "built/index.d.ts",
   "scripts": {
     "debug": "export DEBUG=k-route ||SET DEBUG=k-route || true" , 
     "test": "npm run build  && mocha built/tests.js || true",
