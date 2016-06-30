@@ -22,7 +22,7 @@ export class AnyAuth<TUser, TClaim> implements Auth<TUser, TClaim>{
         private acl?: Acl<TUser, TClaim>) {
     }
 
-    credentials = async (ctx: Koa.Context, next: Next): Promise<any> => {
+    credentialWare = async (ctx: Koa.Context, next: Next): Promise<any> => {
         //const credentials = ctx.request.headers['authentication'];
         let result = await this.provider.credentials(ctx);
         if (result.error) {
@@ -33,7 +33,7 @@ export class AnyAuth<TUser, TClaim> implements Auth<TUser, TClaim>{
         return next();
     }
 
-    authorization = async (ctx: Koa.Context, next: Next): Promise<any> => {
+    authWare = async (ctx: Koa.Context, next: Next): Promise<any> => {
         let result = await this.provider.authenticate(ctx['credentials']);
         if (result.error) {
             ctx.throw(result.error.message ? result.error.message : 'Error', 401);
@@ -55,8 +55,8 @@ export class AnyAuth<TUser, TClaim> implements Auth<TUser, TClaim>{
      */
     lock = (endPoint: AppMiddleware, claims?: TClaim[]): AppMiddleware => {
         return k(
-            this.credentials,
-            this.authorization,
+            this.credentialWare,
+            this.authWare,
             this.acl ? this.acl.restrict(claims) : skip,
             endPoint);
     }
