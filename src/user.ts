@@ -1,4 +1,4 @@
-import {Result, User, IUserService, UserStore, Crypto } from './kontex';
+import {Result, User, Users, UserStore, UCrypto, Store, AppContext } from './kontex';
 import * as Debug from 'debug';
 const debug = Debug('kua:auth')
 
@@ -15,25 +15,19 @@ function TryParse<T>(json: string): Result<T> {
     return { error: error, value: value };
 }
 
-export class Service implements IUserService {
+export class Service<TUser> implements Users<TUser> {
 
-    constructor(private store: UserStore, private crypto: Crypto) {
+    constructor(
+            private store: Store<TUser>,
+            private matchUser : (user: TUser)=> (user: TUser) => boolean) {    
+    }
+
+    async getUser(ctx: AppContext<TUser>): Promise<Result<TUser>> {
+         const credentials = ctx.request.headers['authentication'];
+        return TryParse<TUser>(credentials);
+    }
     
-    }
-
-    getUser(credentials: string): Promise<Result<User>> {
-        return Promise.resolve(TryParse<User>(credentials));
-    }
-
-    
-
-    private matchUser=(user: User): (user: User) => boolean => {
-        return u => {
-            return u.name == user.name && this.crypto.decrypt(u.password) == user.password
-        }
-    }
-
-    authenticate = async (user: User): Promise<Result<User>> => {
+    authenticate = async (user: TUser): Promise<Result<TUser>> => {
         let value = null;
         let error = null;
         try {

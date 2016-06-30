@@ -1,14 +1,14 @@
 import * as Koa from 'koa';
 
-export interface AppContext extends Koa.Context {
-    user: User;
+export interface AppContext<TUser> extends Koa.Context {
+    user: TUser;
 }
 
 export type Next = () => Promise<any>;
 
 export interface Result<T> { value: T, error: Error };
 
-export type AppMiddleware = (ctx: AppContext, next: () => Promise<any>) => Promise<any>;
+export type AppMiddleware = <TUser>(ctx: AppContext<TUser>, next: () => Promise<any>) => Promise<any>;
 
 export interface User {
     name: string;
@@ -17,9 +17,10 @@ export interface User {
     roles?: string[];
 }
 
-export interface IUserService {
-        getUser: (credentialsa: string) => Promise<Result<User>>;
-        authenticate: (u: User) => Promise<Result<User>>;
+export interface Users<TUser> {
+        //getUser: (credentialsa: string) => Promise<Result<User>>;
+        getUser(ctx:AppContext<TUser>): Promise<Result<TUser>>
+        authenticate: (u: TUser) => Promise<Result<TUser>>;
        // hasClaim: (u: User, claims: string[]) => boolean;
 }
 
@@ -31,7 +32,11 @@ export interface Auth<TUser,TClaim>{
     lock (endPoint: AppMiddleware, claims?: TClaim[]) : AppMiddleware
 }
 
-export interface Crypto {
+export interface UCrypto {
     encrypt(i:string) : string ;
     decrypt(s:string) : string ; 
+}
+
+export interface Store<TUser>{
+    find(predicate: (u:TUser)=> boolean) : Promise<TUser>;
 }

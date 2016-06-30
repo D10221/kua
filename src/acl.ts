@@ -1,4 +1,4 @@
-import {AppContext, AppMiddleware, Next, IUserService, Auth} from './kontex';
+import {AppContext, AppMiddleware, Next, Users, Auth} from './kontex';
 
 export class Acl<TUser, TClaim> {
 
@@ -32,7 +32,7 @@ export class Acl<TUser, TClaim> {
      * if no required claims  , then  true
      * if no claims then false
      */
-    hasClaim = (ctx: AppContext, required: TClaim[]): boolean => {
+    hasClaim = (ctx: AppContext<TUser>, required: TClaim[]): boolean => {
         let user = this.getUser(ctx);
         let claims = this.getClaims(user);
         if (!Array.isArray(required)) return true;
@@ -55,7 +55,7 @@ export class Acl<TUser, TClaim> {
     */
     restrict = (required: TClaim[]): AppMiddleware => {
         const auth = this;
-        return async function (ctx: AppContext, next: () => Promise<any>) {
+        return async function (ctx: AppContext<TUser>, next: () => Promise<any>) {
             if (!auth.hasClaim(ctx, required)) {
                 ctx.status = 403;
                 return;

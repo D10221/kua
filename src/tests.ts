@@ -1,11 +1,11 @@
-import {User, Crypto} from './kontex';
+import {User, UCrypto, Store} from './kontex';
 import './auth_test';
 import './route_test';
 import './kompose_test';
 
-export class UStore {
+export class UStore implements Store<User> {
 
-    constructor(crypto: Crypto) {
+    constructor(crypto: UCrypto) {
         this.users = [
             { name: 'admin', password: 'admin', email: 'admin@mail', roles: ['admin'] },
             { name: 'bob', password: 'bob', email: 'bob@mail', roles: ['user'] },
@@ -24,7 +24,7 @@ export class UStore {
     }
 }
 
-export const noCrypto = {
+export const noCrypto: UCrypto = {
 
     encrypt(x: string): string {
         return x;

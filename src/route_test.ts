@@ -7,12 +7,13 @@ import k from './kompose';
 function listen(app) {
     return app.listen();
 }
+type AContext = AppContext<any>;
 
-async function hello(ctx: AppContext, args): Promise<any> {
+async function hello(ctx: AContext, args): Promise<any> {
     ctx.body = "hello";
 }
 
-async function bye(ctx: AppContext, args): Promise<any> {
+async function bye(ctx: AContext, args): Promise<any> {
     ctx.body = "bye";
 }
 

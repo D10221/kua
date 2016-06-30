@@ -1,9 +1,9 @@
 import * as Koa from 'koa';
 import * as Request from 'supertest';
 
-import {AppContext, AppMiddleware, Auth, User} from './kontex';
+import {AppContext, AppMiddleware, Auth, User, UCrypto} from './kontex';
 import * as router from './router';
-import {BasicAuth}from './auth';
+import {AuthBasic}from './auth_basic';
 import * as users from './user';
 import * as testing from './tests';
 import Crypto from './crypto';
@@ -13,22 +13,30 @@ function listen(app) {
     return app.listen();
 }
 
-async function hello(ctx: AppContext, args): Promise<boolean> {
+async function hello(ctx: AppContext<User>, args): Promise<boolean> {
     let name = 'hello';
     ctx.body = name;
     return true;
 }
 
-async function bye(ctx: AppContext, args): Promise<boolean> {
+async function bye(ctx: AppContext<User>, args): Promise<boolean> {
     let name = 'bye';
     ctx.body = name;
     return true;
 }
 
-async function admin(ctx: AppContext, args): Promise<boolean> {
+async function admin(ctx: AppContext<User>, args): Promise<boolean> {
     let name = 'admin';
     ctx.body = name;
     return true;
+}
+
+const matchUser= (crypto:UCrypto) => {
+    return (user: User): (user: User) => boolean => {
+        return u => {
+            return u.name == user.name &&  crypto.decrypt(u.password) == user.password
+        }
+    }
 }
 
 describe('kompose auth + routing', () => {
@@ -38,8 +46,10 @@ describe('kompose auth + routing', () => {
         let app = new Koa();
         let crypto = testing.noCrypto;
         
-        let auth :Auth<User,string>= new BasicAuth( 
-                new users.Service( new testing.UStore(crypto),crypto),
+        let auth :Auth<User,string>= new AuthBasic( 
+                new users.Service(
+                     new testing.UStore(crypto),
+                     matchUser(crypto)),
                 new Acl<User,string>(
                     ctx=> ctx.user, 
                     user=> user.roles));

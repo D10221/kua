@@ -1,25 +1,19 @@
-import {AppContext, AppMiddleware, Next,  Users, Auth, Result} from './kontex';
+import {AppContext, AppMiddleware, Next,  Users, Auth} from './kontex';
 import {Acl} from './acl';
 
 import * as Koa from 'koa';
 const compose = require('koa-compose');
 import * as pathToRegexp from 'path-to-regexp';
-  
-// let _getUser = async (ctx)=>{
-//         const credentials = ctx.request.headers['authentication'];
-//         let result = await this.getUser(credentials);
-// }
 
 
-export class AnyAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
+export class AuthBasic<TUser,TClaim> implements Auth<TUser,TClaim>{
 
-    constructor(private users: Users<TUser>, private acl:Acl<TUser,TClaim> ) {
+    constructor(private usvc: Users<TUser>, private acl:Acl<TUser,TClaim> ) {
         
     }
-
+    
     userWare = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
-        //const credentials = ctx.request.headers['authentication'];
-        let result = await this.users.getUser(ctx);
+        let result = await this.usvc.getUser(ctx);
         if (result.error) {
             ctx.throw(`user not found: ${result.error.message ? result.error.message : 'Error'}`, 407);
             return;
@@ -29,7 +23,7 @@ export class AnyAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
     }
 
     authWare = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
-        let result = await this.users.authenticate(ctx.user);
+        let result = await this.usvc.authenticate(ctx.user);
         if (result.error) {
             ctx.throw(result.error.message ? result.error.message : 'Error', 401);
             return;
