@@ -10,22 +10,16 @@ export interface Result<T> { value: T, error: Error };
 
 export type AppMiddleware = <TUser>(ctx: AppContext<TUser>, next: () => Promise<any>) => Promise<any>;
 
-export interface User {
-    name: string;
-    password: string;
-    email?: string;
-    roles?: string[];
+export interface Store<TUser> {
+    find(predicate: (u:TUser)=> boolean) : Promise<TUser>;
 }
 
-export interface Users<TUser> {
-        //getUser: (credentialsa: string) => Promise<Result<User>>;
-        getUser(ctx:AppContext<TUser>): Promise<Result<TUser>>
+export interface AuthProvider<TUser> {
+        fromContext(ctx:AppContext<TUser>): Promise<Result<TUser>>
         authenticate: (u: TUser) => Promise<Result<TUser>>;
-       // hasClaim: (u: User, claims: string[]) => boolean;
-}
-
-export interface UserStore {
-    find(predicate: (u:User)=> boolean) : Promise<User>;
+        decode<T>(json: string): Result<T>;
+        encode(u:TUser) :string;      
+        key: string; 
 }
 
 export interface Auth<TUser,TClaim>{
@@ -37,6 +31,3 @@ export interface UCrypto {
     decrypt(s:string) : string ; 
 }
 
-export interface Store<TUser>{
-    find(predicate: (u:TUser)=> boolean) : Promise<TUser>;
-}

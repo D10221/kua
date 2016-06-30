@@ -1,58 +1,45 @@
-import {AppContext, AppMiddleware, Next,  Users, Auth} from './kontex';
-import {Acl} from './acl';
+import {Result,   UCrypto, Store, AppContext, AuthProvider } from './kontex';
+import * as Debug from 'debug';
+const debug = Debug('kua:auth')
 
-import * as Koa from 'koa';
-const compose = require('koa-compose');
-import * as pathToRegexp from 'path-to-regexp';
+export class AuthBasic<TUser> implements AuthProvider<TUser> {
 
+    constructor(        
+        private find: (user: TUser) => Promise<TUser> ) {
+    }
+   
+    decode<T>(json: string): Result<T> {
+        let value = null;
+        let error = null;
+        try {
+            value = JSON.parse(json)
+        } catch (e) {
+            debug(`users: Parse: ${json}, Error: ${e.message}`)
+            error = e;
+        }
+        return { error: error, value: value };
+    }
 
-export class AuthBasic<TUser,TClaim> implements Auth<TUser,TClaim>{
-
-    constructor(private usvc: Users<TUser>, private acl:Acl<TUser,TClaim> ) {
-        
+    encode(u:TUser) :string {
+        return !u ? '' : JSON.stringify(u);
     }
     
-    userWare = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
-        let result = await this.usvc.getUser(ctx);
-        if (result.error) {
-            ctx.throw(`user not found: ${result.error.message ? result.error.message : 'Error'}`, 407);
-            return;
-        }
-        ctx.user = result.value;
-        return next();
+    key = 'authentication';
+
+    fromContext = async (ctx: AppContext<TUser>): Promise<Result<TUser>> => {
+        let credentials = ctx.request.headers[this.key];
+        return this.decode<TUser>(credentials);
     }
 
-    authWare = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
-        let result = await this.usvc.authenticate(ctx.user);
-        if (result.error) {
-            ctx.throw(result.error.message ? result.error.message : 'Error', 401);
-            return;
+    authenticate = async (user: TUser): Promise<Result<TUser>> => {
+        let value = null;
+        let error = null;
+        try {
+            value = await this.find(user);
+            if (!value) { throw new Error('User Not Found') };
+        } catch (e) {
+            error = e;
         }
-        // replace with full user 
-        ctx.user = result.value;
-        next();
-    }
-
-   
-    /**
-     * Requires 'endPoint'... resource to be locked down  
-     * 
-     * @export
-     * @param {AppMiddleware} endPoint
-     * @param {Claim[]} [roles] optional claims
-     * @returns {AppMiddleware}}
-     */
-    lock = (endPoint: AppMiddleware, claims?: TClaim[]): AppMiddleware => {
-        return compose([
-            this.userWare,
-            this.authWare,
-            this.acl.restrict(claims),
-            endPoint
-        ]);
+        return { value: value, error: error };
     }
 }
-
-
-
-
-

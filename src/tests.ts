@@ -1,11 +1,11 @@
-import {User, UCrypto, Store} from './kontex';
+import {UCrypto} from './kontex';
 import './auth_test';
 import './route_test';
 import './kompose_test';
 
-export class UStore implements Store<User> {
+export class UStore {
 
-    constructor(crypto: UCrypto) {
+    constructor(private crypto: UCrypto) {
         this.users = [
             { name: 'admin', password: 'admin', email: 'admin@mail', roles: ['admin'] },
             { name: 'bob', password: 'bob', email: 'bob@mail', roles: ['user'] },
@@ -19,8 +19,18 @@ export class UStore implements Store<User> {
 
     users: User[];
 
-    find = (predicate) : Promise<User> => {
-        return Promise.resolve(this.users.find(predicate))
+    find= (user: User): Promise<User> => {
+        const users = this.users;
+        return new Promise((resolve, reject) => {
+            try {
+                resolve(
+                    users.find(current => {
+                    return current.name == user.name && this.crypto.decrypt(current.password) == user.password
+                }));
+            } catch (error) {
+                reject(error);
+            }
+        })
     }
 }
 
@@ -34,3 +44,13 @@ export const noCrypto: UCrypto = {
         return x;
     }
 }
+
+export const store =  new UStore(noCrypto);
+
+export interface User {
+    name: string;
+    password: string;
+    email?: string;
+    roles?: string[];
+}
+

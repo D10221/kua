@@ -1,25 +1,25 @@
-import {AppContext, AppMiddleware, Next,  Users, Auth, Result} from './kontex';
+import {AppContext, AppMiddleware, Next,  Auth, AuthProvider,  Result} from './kontex';
 import {Acl} from './acl';
-
+import k  from './kompose'
 import * as Koa from 'koa';
-const compose = require('koa-compose');
 import * as pathToRegexp from 'path-to-regexp';
   
 // let _getUser = async (ctx)=>{
 //         const credentials = ctx.request.headers['authentication'];
 //         let result = await this.getUser(credentials);
 // }
-
+const skip = async (ctx, next)=> { next() };
 
 export class AnyAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
 
-    constructor(private users: Users<TUser>, private acl:Acl<TUser,TClaim> ) {
-        
+    constructor(
+        public provider: AuthProvider<TUser>,       
+        private acl?:Acl<TUser,TClaim> ) {
     }
-
+    
     userWare = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
         //const credentials = ctx.request.headers['authentication'];
-        let result = await this.users.getUser(ctx);
+        let result = await this.provider.fromContext(ctx);
         if (result.error) {
             ctx.throw(`user not found: ${result.error.message ? result.error.message : 'Error'}`, 407);
             return;
@@ -29,7 +29,7 @@ export class AnyAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
     }
 
     authWare = async (ctx: AppContext<TUser>, next: Next): Promise<any> => {
-        let result = await this.users.authenticate(ctx.user);
+        let result = await this.provider.authenticate(ctx.user);
         if (result.error) {
             ctx.throw(result.error.message ? result.error.message : 'Error', 401);
             return;
@@ -49,12 +49,10 @@ export class AnyAuth<TUser,TClaim> implements Auth<TUser,TClaim>{
      * @returns {AppMiddleware}}
      */
     lock = (endPoint: AppMiddleware, claims?: TClaim[]): AppMiddleware => {
-        return compose([
-            this.userWare,
+        return k( this.userWare,
             this.authWare,
-            this.acl.restrict(claims),
-            endPoint
-        ]);
+            this.acl ? this.acl.restrict(claims) : skip ,
+            endPoint);
     }
 }
 

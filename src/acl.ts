@@ -1,4 +1,14 @@
-import {AppContext, AppMiddleware, Next, Users, Auth} from './kontex';
+import {AppContext, AppMiddleware} from './kontex';
+
+export interface ClaimProvider<TUser, TClaim> {
+    //
+    getUser: (ctx) => TUser,
+    //
+    getClaims: (u: TUser) => TClaim[],
+    // 
+    claimMatch?: (userClaims: TClaim[], requiredClaims: TClaim[]) => boolean
+}
+
 
 export class Acl<TUser, TClaim> {
 
@@ -9,22 +19,17 @@ export class Acl<TUser, TClaim> {
      * @param {(u:TUser)=> TClaim[]} getClaims , how to get The Claims from the User,
      * @param {(r:TClaim)=> boolean} [claimMatch] ,optional:  How to Check user provided claimsagainst required claims, returns claim found
      */
-    constructor(
-        //
-        private getUser: (ctx) => TUser,
-        //
-        private getClaims: (u: TUser) => TClaim[],
-        // 
-        private claimMatch?: (userClaims: TClaim[], requiredClaims: TClaim[]) => boolean) {
-        
-        this.claimMatch = this.claimMatch || ((uclaims, required) => {
+    constructor(public provider: ClaimProvider<TUser, TClaim>) {
+
+        provider.claimMatch = provider.claimMatch || ((uclaims, required) => {
             for (let uclaim of uclaims) {
                 for (let r of required) {
                     if (r == uclaim) {
                         return true;
                     }
                 }
-            } return false
+            }
+            return false
         })
     }
     /**
@@ -33,19 +38,10 @@ export class Acl<TUser, TClaim> {
      * if no claims then false
      */
     hasClaim = (ctx: AppContext<TUser>, required: TClaim[]): boolean => {
-        let user = this.getUser(ctx);
-        let claims = this.getClaims(user);
+        let user = this.provider.getUser(ctx);
+        let claims = this.provider.getClaims(user);
         if (!Array.isArray(required)) return true;
-        if (user && claims) {
-            for (let claim of claims) {
-                for (let userClaim of required) {
-                    if (userClaim == claim) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+        return (user && claims) ? this.provider.claimMatch(claims, required) : false;
     }
     /**
     *  Requires UserWare  
@@ -63,4 +59,4 @@ export class Acl<TUser, TClaim> {
             return next();
         }
     }
-}
+} 

@@ -1,37 +1,35 @@
 import * as Koa from 'koa';
 import * as Request from 'supertest';
-import * as testing from './tests';
-import {AppContext, User, Auth, UCrypto } from './kontex';
-import {AnyAuth} from './auth';
 import {Acl} from './acl';
-import * as users from './user';
+import * as kua from './';
+
+//
+import * as testing from './tests';
 
 function listen(app) {
     return app.listen();
 }
+import User = testing.User;
 
-async function endPoint(ctx: AppContext<User>, next: () => Promise<any>): Promise<any> {
+async function endPoint(ctx, next: () => Promise<any>): Promise<any> {
     ctx.body = "hello";
-}
-
-const matchUser= (crypto:UCrypto) => {
-    return (user: User): (user: User) => boolean => {
-        return u => {
-            return u.name == user.name &&  crypto.decrypt(u.password) == user.password
-        }
-    }
 }
 
 describe('Auth: restrict access,...composing', function () {
        
-    it('works', function (done) {
+    let users = {
+        admin: { name: "admin", password: "admin" },
+        bob: { name: 'bob', password: 'bob' },
+        guest: { name: 'guest', password: 'guest' }
+    }
 
-        const crypto = testing.noCrypto;
-        const acl = new Acl<User,string>(ctx=> ctx.user, user=> user.roles );
-        const uservice = new users.Service<User>( 
-                    new testing.UStore(crypto),
-                    matchUser(crypto));
-        const auth :Auth<User,string>= new AnyAuth(uservice,acl);
+    it('works', function (done) {
+                                           
+        const auth = kua.create(
+            // Find the user based on partial user, ...credentials
+            kua.basicAuth(testing.store.find),
+            // ACL 
+            kua.acl(ctx=> ctx.user, user=> user.roles));
 
         let app = new Koa().use(
             auth.lock(
@@ -41,7 +39,7 @@ describe('Auth: restrict access,...composing', function () {
         let request = Request.agent(listen(app));
 
         request.get('/')
-            .set('Authentication', JSON.stringify({ name: "admin", password: "admin" }))
+            .set(auth.provider.key, auth.provider.encode(users.admin))
             .expect("hello")
             .end((error, r) => {
                 if (error) throw (error);
@@ -54,7 +52,7 @@ describe('Auth: restrict access,...composing', function () {
             })
 
         request.get('/')
-            .set('Authentication', JSON.stringify({ name: 'bob', password: 'bob' }))
+            .set(auth.provider.key, auth.provider.encode(users.bob))
             .expect(200)
             .expect('hello')
             .end((error, r) => {
@@ -62,7 +60,7 @@ describe('Auth: restrict access,...composing', function () {
             })
 
         request.get('/')
-            .set('Authentication', JSON.stringify({ name: 'guest', password: 'guest' }))
+            .set(auth.provider.key, auth.provider.encode(users.guest))
             .expect(403)
             .end((error, r) => {
                 if (error) throw (error);
