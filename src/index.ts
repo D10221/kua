@@ -2,6 +2,7 @@ import {AnyAuth} from './auth';
 import {AuthBasic} from './auth_basic';
 import {Acl} from './acl';
 import {Credential} from './kontex';
+import * as krouter from './router'
 export {Credential} from './kontex';
 
 /**
@@ -40,14 +41,16 @@ export function basicAuth<TUser>(find: (credential: Credential) => Promise<TUser
  * @param {(userClaims: C[], requiredClaims: C[]) => boolean} [claimMatch] : how to check , compare claims, defaults to..claim exists in claims  
  * @returns {Acl<U, C>}
  */
-export function acl<U, C>(
+export function acl<TUser, TClaim>(
     // how to get user from context 
-    getUser: (ctx) => U,
+    getUser: (ctx) => TUser,
     // how to  get claims from user 
-    getClaims: (u: U) => C[],
-    // Optional : defaults to x == y 
-    claimMatch?: (userClaims: C[], requiredClaims: C[]) => boolean): Acl<U, C> {
+    getClaims: (u: TUser) => TClaim[],
+    // Optional : defaults to <claim> in user.<claims> 
+    claimMatch?: (userClaims: TClaim[], requiredClaims: TClaim[]) => boolean): Acl<TUser, TClaim> {
 
     return new Acl({ getUser: getUser, getClaims, claimMatch });
 }
+
+export const router = krouter; 
 

@@ -1,7 +1,12 @@
-import {UCrypto, Credential} from './kontex';
+import {Credential} from './kontex';
 import './auth_test';
 import './route_test';
 import './kompose_test';
+
+export interface UCrypto {
+    encrypt(i:string) : string ;
+    decrypt(s:string) : string ; 
+}
 
 export class UStore {
 

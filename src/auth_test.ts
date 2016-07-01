@@ -16,7 +16,7 @@ async function endPoint(ctx, next: () => Promise<any>): Promise<any> {
 }
 
 describe('Auth: restrict access,...composing', function () {
-       
+
     let users = {
         admin: { name: "admin", password: "admin" },
         bob: { name: 'bob', password: 'bob' },
@@ -24,17 +24,17 @@ describe('Auth: restrict access,...composing', function () {
     }
 
     it('works', function (done) {
-                                           
+
         const auth = kua.create(
             // Find the user based on partial user, ...credentials
             kua.basicAuth(testing.store.find),
             // ACL 
-            kua.acl(ctx=> ctx.user, user=> user.roles));
+            kua.acl(ctx => ctx.user, user => user.roles));
 
         let app = new Koa().use(
             auth.lock(
                 endPoint, ['admin', 'user'])
-            );        
+        );
 
         let request = Request.agent(listen(app));
 
@@ -42,7 +42,7 @@ describe('Auth: restrict access,...composing', function () {
             .set(auth.provider.key, auth.provider.encode(users.admin))
             .expect("hello")
             .end((error, r) => {
-                if (error) throw (error);                
+                if (error) throw (error);
             });
 
         request.get('/')
@@ -66,5 +66,12 @@ describe('Auth: restrict access,...composing', function () {
                 if (error) throw (error);
                 done();
             })
+
+        // request.get('admin:admin@/something')            
+        //     .expect(200)
+        //     .end((error, r) => {
+        //         if (error) throw (error);
+        //         done();
+        //     })
     })
 })

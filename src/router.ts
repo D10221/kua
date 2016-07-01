@@ -1,3 +1,8 @@
+/**
+ * from: https://github.com/koajs/route
+ * tweaked by D10221
+ *  */ 
+
 import * as Koa from 'koa'
 import * as methods from 'methods';
 import * as pathToRegexp from 'path-to-regexp';
@@ -14,7 +19,7 @@ import {AppMiddleware } from './kontex';
  * it's this, is Koa.Context.
  * Return Type should be a promise, I think...
  */
-export type RouteAction = (ctx:Koa.Context, ...params:any[]) => Promise<boolean> ;
+export type RouteAction = (ctx:Koa.Context, ...params:any[]) => Promise<any> ;
 
 /**
  * @pathExpression: string 'route to match'
@@ -60,11 +65,8 @@ let create = (method?:string) : Route => {
         //collect route segments 
         const args = m.slice(1).map(decode);
         debug('%s %s matches %s %j', ctx.method, path, ctx.path, args);                    
-        //...                          
-        let ok = await action(ctx, args);
-        if(ok){
-          return ;
-        } 
+        
+        return await action(ctx, args)
       }
 
       // miss      

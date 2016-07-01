@@ -1,9 +1,7 @@
 import * as Koa from 'koa';
 import * as Request from 'supertest';
-import { AppMiddleware, Auth, UCrypto} from './kontex';
+import { AppMiddleware, Auth} from './kontex';
 import * as router from './router';
-//import {AnyAuth}from './auth';
-//import {AuthBasic} from './auth_basic'
 import * as testing from './tests';
 import * as kua from './';
 
@@ -31,13 +29,6 @@ async function admin(ctx, args): Promise<boolean> {
     return true;
 }
 
-const matchUser = (crypto: UCrypto) => {
-    return (user: User): (user: User) => boolean => {
-        return u => {
-            return u.name == user.name && crypto.decrypt(u.password) == user.password
-        }
-    }
-}
 
 describe('kompose auth + routing', () => {
 
